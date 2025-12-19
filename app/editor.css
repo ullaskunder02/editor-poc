@@ -1,0 +1,387 @@
+/* Main container */
+.editor-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.editor-wrapper {
+  width: 100%;
+  max-width: 900px;
+}
+
+/* Editor card */
+.editor-card {
+  background: #2d2d3f;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.editor-holder {
+  min-height: 400px;
+  margin-bottom: 1.5rem;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.download-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Markdown output */
+.markdown-output {
+  margin-top: 2rem;
+  background: #2d2d3f;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.output-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin-bottom: 1rem;
+}
+
+.success-alert {
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #81c784;
+}
+
+.alert-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.markdown-preview {
+  background: #1e1e2e;
+  border-radius: 8px;
+  padding: 1.5rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: #e0e0e0;
+  font-family: "Geist Mono", monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.markdown-preview code {
+  font-family: inherit;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .editor-container {
+    padding: 1rem;
+  }
+
+  .editor-card,
+  .markdown-output {
+    padding: 1.5rem;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Heading styles for different levels */
+.ce-header {
+  padding: 0.5rem 0 !important;
+  margin: 1rem 0 !important;
+}
+
+h1.ce-header {
+  font-size: 2.5rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  color: #f0f0f0 !important;
+  letter-spacing: -0.02em !important;
+}
+
+h2.ce-header {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: #e8e8e8 !important;
+  letter-spacing: -0.01em !important;
+}
+
+h3.ce-header {
+  font-size: 1.6rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #e0e0e0 !important;
+}
+
+h4.ce-header {
+  font-size: 1.3rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #d8d8d8 !important;
+}
+
+h5.ce-header {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  color: #d0d0d0 !important;
+}
+
+h6.ce-header {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  color: #c8c8c8 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Adding styles for drag and drop, images, embeds, and quotes */
+
+/* Drag and drop styles */
+.ce-block--drop-target .ce-block__content::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
+}
+
+.ce-block.ce-block--selected {
+  background-color: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+}
+
+/* Image tool styles */
+.cdx-input {
+  background: #1e1e2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e0e0e0 !important;
+  border-radius: 8px !important;
+  padding: 0.75rem !important;
+  font-size: 0.9rem !important;
+}
+
+.cdx-input:focus {
+  border-color: #667eea !important;
+  outline: none !important;
+}
+
+.image-tool {
+  --bg-color: #2d2d3f;
+  --front-color: #e0e0e0;
+  --border-color: rgba(255, 255, 255, 0.1);
+}
+
+.image-tool__image {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  margin-bottom: 0.5rem !important;
+  background: #1e1e2e !important;
+}
+
+.image-tool__image img {
+  display: block !important;
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 12px !important;
+}
+
+.image-tool__image-picture {
+  border-radius: 12px !important;
+  display: block !important;
+}
+
+.image-tool__image-preloader {
+  background: #1e1e2e !important;
+  border-radius: 12px !important;
+}
+
+.image-tool__caption {
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #b0b0b0 !important;
+  padding: 0.5rem 0 !important;
+  margin-top: 0.5rem !important;
+}
+
+.cdx-loader {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-top-color: #667eea !important;
+}
+
+/* File input styles */
+.cdx-input[type="file"] {
+  padding: 0.5rem !important;
+}
+
+/* Embed tool styles */
+.embed-tool__caption {
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #b0b0b0 !important;
+  padding: 0.5rem 0 !important;
+  margin-top: 0.5rem !important;
+}
+
+.embed-tool__content {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Quote tool styles */
+.cdx-quote {
+  background: rgba(102, 126, 234, 0.05) !important;
+  border-left: 4px solid #667eea !important;
+  border-radius: 0 8px 8px 0 !important;
+  padding: 1rem 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.cdx-quote__text {
+  color: #e0e0e0 !important;
+  font-size: 1.1rem !important;
+  font-style: italic !important;
+  line-height: 1.6 !important;
+  min-height: unset !important;
+}
+
+.cdx-quote__caption {
+  color: #b0b0b0 !important;
+  font-size: 0.9rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.cdx-quote [contentEditable="true"][data-placeholder]::before {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Delimiter tool styles */
+.ce-delimiter {
+  line-height: 1.6em !important;
+  width: 100% !important;
+  text-align: center !important;
+  margin: 2rem 0 !important;
+}
+
+.ce-delimiter::before {
+  display: inline-block !important;
+  content: "***" !important;
+  font-size: 1.5rem !important;
+  letter-spacing: 0.6em !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* File upload button styles */
+.cdx-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.cdx-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Attach file styles */
+.cdx-attaches__file-icon {
+  background: #667eea !important;
+}
+
+.cdx-attaches__file-info {
+  color: #e0e0e0 !important;
+}
+
+.cdx-attaches__file-name {
+  color: #e0e0e0 !important;
+}
+
+.cdx-attaches__file-size {
+  color: #b0b0b0 !important;
+}
+
+.cdx-attaches__download-button {
+  background: transparent !important;
+  border: 2px solid #667eea !important;
+  color: #667eea !important;
+  border-radius: 8px !important;
+  padding: 0.5rem 1rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.cdx-attaches__download-button:hover {
+  background: rgba(102, 126, 234, 0.1) !important;
+}
