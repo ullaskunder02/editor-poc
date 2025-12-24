@@ -30,6 +30,8 @@ import Delimiter from "@editorjs/delimiter"
 // @ts-ignore
 import DragDrop from "editorjs-drag-drop"
 
+import StrikethroughInline from "./strikethrough"
+
 const EDITOR_HOLDER_ID = "editorjs"
 class LiveMediaTool implements BlockTool {
   static get toolbox() {
@@ -183,6 +185,7 @@ export default function Page() {
           toolbox: { title: "Main Title", icon: "<b>H1</b>" },
           config: { levels: [1], defaultLevel: 1 },
           shortcut: "CMD+SHIFT+X",
+          onReady: () => console.log("h1 tool is ready"),
         },
         h2: {
           class: Header,
@@ -193,6 +196,12 @@ export default function Page() {
           class: Header,
           toolbox: { title: "Section", icon: "<b>H3</b>" },
           config: { levels: [3], defaultLevel: 3 },
+        },
+        strikethrough: {
+          class: StrikethroughInline,
+          shortcut: "CMD+SHIFT+S",
+          onReady: () => console.log("Strikethrough tool is ready"),
+
         },
         media: LiveMediaTool,
         list: List,
