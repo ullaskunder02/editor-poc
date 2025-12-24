@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["file:///Users/admin/knidal-projects/editor-imp/app/globals.css"],"sourcesContent":["*, *::after, *::before {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}"],"names":[],"mappings":"AAAA"}}]
-}
