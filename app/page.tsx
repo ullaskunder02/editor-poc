@@ -31,126 +31,168 @@ import Delimiter from "@editorjs/delimiter"
 import DragDrop from "editorjs-drag-drop"
 
 const EDITOR_HOLDER_ID = "editorjs"
-
-// --- MEDIA TOOL (STAYS THE SAME) ---
 class LiveMediaTool implements BlockTool {
-  static get toolbox() { return { title: 'Video/Audio', icon: '🎥' }; }
-  private data: any;
-  private wrapper: HTMLElement;
-  private descriptionField: HTMLElement | null = null;
+  static get toolbox() {
+    return { title: "Video / Audio", icon: "🎥" }
+  }
+
+  private data: any
+  private wrapper: HTMLElement
+  private descriptionField: HTMLElement | null = null
+
   constructor({ data }: { data: any }) {
-    this.data = data || { url: '', type: '', name: '', description: '' };
-    this.wrapper = document.createElement('div');
+    this.data = data || { url: "", type: "", name: "", description: "" }
+    this.wrapper = document.createElement("div")
   }
+
   render() {
-    this.wrapper.style.padding = "15px";
-    this.wrapper.style.border = "1px solid #f0f0f0";
-    this.wrapper.style.borderRadius = "10px";
-    if (this.data && this.data.url) { this._renderPlayer(this.data.url, this.data.type); } 
-    else {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'video/*,audio/*';
-      input.style.display = 'none';
+    this.wrapper.style.padding = "15px"
+    this.wrapper.style.border = "1px solid #f0f0f0"
+    this.wrapper.style.borderRadius = "10px"
+
+    if (this.data.url) {
+      this._renderPlayer(this.data.url, this.data.type)
+    } else {
+      const input = document.createElement("input")
+      input.type = "file"
+      input.accept = "video/*,audio/*"
+      input.style.display = "none"
+
       input.onchange = (e: any) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
+        const file = e.target.files[0]
+        if (!file) return
+
+        const reader = new FileReader()
         reader.onload = (event) => {
-          const url = event.target?.result as string;
-          const type = file.type.startsWith('video') ? 'video' : 'audio';
-          this.data = { ...this.data, url, type, name: file.name };
-          this._renderPlayer(url, type);
-        };
-        reader.readAsDataURL(file);
-      };
-      this.wrapper.appendChild(input);
-      setTimeout(() => input.click(), 0);
+          const url = event.target?.result as string
+          const type = file.type.startsWith("video") ? "video" : "audio"
+          this.data = { ...this.data, url, type, name: file.name }
+          this._renderPlayer(url, type)
+        }
+        reader.readAsDataURL(file)
+      }
+
+      this.wrapper.appendChild(input)
+      setTimeout(() => input.click(), 0)
     }
-    return this.wrapper;
+
+    return this.wrapper
   }
-  _renderPlayer(url: string, type: 'video' | 'audio') {
-    this.wrapper.innerHTML = '';
-    const mediaTag = document.createElement(type);
-    mediaTag.src = url; mediaTag.controls = true; mediaTag.style.width = "100%";
-    const desc = document.createElement('div');
-    desc.contentEditable = "true";
-    desc.dataset.placeholder = "Add a description...";
-    desc.innerHTML = this.data.description || '';
-    desc.style.cssText = "margin-top:10px; padding:8px; border-left:2px solid #0070f3;";
-    desc.addEventListener('input', () => { this.data.description = desc.innerHTML; });
-    this.descriptionField = desc;
-    this.wrapper.appendChild(mediaTag);
-    this.wrapper.appendChild(desc);
+
+  _renderPlayer(url: string, type: "video" | "audio") {
+    this.wrapper.innerHTML = ""
+
+    const media = document.createElement(type)
+    media.src = url
+    media.controls = true
+    media.style.width = "100%"
+
+    const desc = document.createElement("div")
+    desc.contentEditable = "true"
+    desc.dataset.placeholder = "Add a description..."
+    desc.innerHTML = this.data.description || ""
+    desc.style.cssText =
+      "margin-top:10px;padding:8px;border-left:2px solid #0070f3;"
+
+    desc.addEventListener("input", () => {
+      this.data.description = desc.innerHTML
+    })
+
+    this.descriptionField = desc
+    this.wrapper.appendChild(media)
+    this.wrapper.appendChild(desc)
   }
-  save() { return { ...this.data, description: this.descriptionField ? this.descriptionField.innerHTML : this.data.description }; }
+
+  save() {
+    return {
+      ...this.data,
+      description: this.descriptionField
+        ? this.descriptionField.innerHTML
+        : this.data.description,
+    }
+  }
 }
 
-// --- CONVERTER (UPDATED TO HANDLE MULTIPLE HEADER TYPES) ---
 const convertToMarkdown = (data: OutputData): string => {
   let markdown = ""
+
   data.blocks.forEach((block) => {
-    // Check if the type is h1, h2, etc., or the default 'header'
     if (block.type.match(/^h[1-6]$/)) {
-        const level = block.type.charAt(1);
-        markdown += `${"#".repeat(parseInt(level))} ${block.data.text}\n\n`
-    } else {
-        switch (block.type) {
-          case "header":
-            markdown += `${"#".repeat(block.data.level || 2)} ${block.data.text}\n\n`
-            break
-          case "paragraph":
-            markdown += `${block.data.text}\n\n`
-            break
-          case "media":
-            const tag = block.data.type === 'video' ? 'video' : 'audio';
-            markdown += `<${tag} controls src="${block.data.url}" style="width:100%"></${tag}>\n`
-            if (block.data.description) markdown += `\n*${block.data.description.replace(/<[^>]*>/g, '')}*\n\n`
-            else markdown += `\n`
-            break
-          case "delimiter":
-            markdown += `---\n\n`
-            break
-          default:
-            if (block.data.text) markdown += `${block.data.text}\n\n`
-            break
+      const level = Number(block.type.charAt(1))
+      markdown += `${"#".repeat(level)} ${block.data.text}\n\n`
+      return
+    }
+
+    switch (block.type) {
+      case "header":
+        markdown += `${"#".repeat(block.data.level || 2)} ${
+          block.data.text
+        }\n\n`
+        break
+      case "paragraph":
+        markdown += `${block.data.text}\n\n`
+        break
+      case "media":
+        const tag = block.data.type === "video" ? "video" : "audio"
+        markdown += `<${tag} controls src="${block.data.url}"></${tag}>\n`
+        if (block.data.description) {
+          markdown += `*${block.data.description.replace(
+            /<[^>]*>/g,
+            ""
+          )}*\n\n`
         }
+        break
+      case "delimiter":
+        markdown += `---\n\n`
+        break
+      default:
+        if (block.data?.text) markdown += `${block.data.text}\n\n`
     }
   })
+
   return markdown.trim()
 }
 
 export default function Page() {
   const editorInstance = useRef<EditorJS | null>(null)
-  const [markdown, setMarkdown] = useState<string>("")
-  const [showMarkdown, setShowMarkdown] = useState<boolean>(false)
+  const [markdown, setMarkdown] = useState("")
+  const [showMarkdown, setShowMarkdown] = useState(false)
 
   useEffect(() => {
     if (!editorInstance.current) initEditor()
-    return () => { editorInstance.current?.destroy(); editorInstance.current = null; }
+
+    return () => {
+      editorInstance.current?.destroy()
+      editorInstance.current = null
+    }
   }, [])
 
   const initEditor = () => {
     const editor = new EditorJS({
       holder: EDITOR_HOLDER_ID,
-      placeholder: "Press '/' for commands...",
-      onReady: () => { /* @ts-ignore */ new DragDrop(editor) },
-        tools: {
-        // We override the 'toolbox' property for each level so they show H1, H2, etc.
-        h1: { 
-          class: Header, 
-          toolbox: { title: 'Main Title', icon: '<b style="font-size: 1.2em">H1</b>' },
-          config: { placeholder: 'Heading 1', levels: [1], defaultLevel: 1 } 
+      placeholder: "Press '/' for tools...",
+
+      onReady: () => {
+        // @ts-ignore
+        new DragDrop(editor)
+      },
+
+      tools: {
+        h1: {
+          class: Header,
+          toolbox: { title: "Main Title", icon: "<b>H1</b>" },
+          config: { levels: [1], defaultLevel: 1 },
+          shortcut: "CMD+SHIFT+X",
         },
-        h2: { 
-          class: Header, 
-          toolbox: { title: 'Subtitle', icon: '<b>H2</b>' },
-          config: { placeholder: 'Heading 2', levels: [2], defaultLevel: 2 } 
+        h2: {
+          class: Header,
+          toolbox: { title: "Subtitle", icon: "<b>H2</b>" },
+          config: { levels: [2], defaultLevel: 2 },
         },
-        h3: { 
-          class: Header, 
-          toolbox: { title: 'Section', icon: '<b style="font-size: 0.9em">H3</b>' },
-          config: { placeholder: 'Heading 3', levels: [3], defaultLevel: 3 } 
+        h3: {
+          class: Header,
+          toolbox: { title: "Section", icon: "<b>H3</b>" },
+          config: { levels: [3], defaultLevel: 3 },
         },
         media: LiveMediaTool,
         list: List,
@@ -162,8 +204,9 @@ export default function Page() {
         inlineCode: InlineCode,
         marker: Marker,
         underline: Underline,
-      }
+      },
     })
+
     editorInstance.current = editor
   }
 
@@ -176,20 +219,58 @@ export default function Page() {
   }
 
   return (
-    <div style={{ padding: "40px", maxWidth: "850px", margin: "0 auto", fontFamily: "system-ui" }}>
-      <div id={EDITOR_HOLDER_ID} style={{ border: "1px solid #e0e0e0", padding: "30px", borderRadius: "16px", minHeight: "450px", backgroundColor: "#fff" }} />
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "30px" }}>
-        <button onClick={handleSave} style={{ padding: "14px 32px", background: "#0070f3", color: "white", borderRadius: "10px", border: "none", cursor: "pointer", fontWeight: "600" }}>
+    <div style={{ padding: 40, maxWidth: 850, margin: "0 auto" }}>
+      {/* 🔥 REMOVE PLUS MENU */}
+      <style>{`
+        .ce-toolbar__plus {
+          display: none !important;
+        }
+        .ce-toolbar__actions {
+          margin-left: 0 !important;
+        }
+      `}</style>
+
+      <div
+        id={EDITOR_HOLDER_ID}
+        style={{
+          border: "1px solid #e0e0e0",
+          padding: 30,
+          borderRadius: 16,
+          minHeight: 450,
+          background: "#fff",
+        }}
+      />
+
+      <div style={{ textAlign: "center", marginTop: 30 }}>
+        <button
+          onClick={handleSave}
+          style={{
+            padding: "14px 32px",
+            background: "#0070f3",
+            color: "#fff",
+            borderRadius: 10,
+            border: "none",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
           Preview Content
         </button>
       </div>
+
       {showMarkdown && (
-        <div style={{ marginTop: "50px" }}>
-          <div style={{ border: "1px solid #ddd", padding: "40px", borderRadius: "16px", background: "#fff" }} dangerouslySetInnerHTML={{ __html: markdown.replace(/\n/g, '<br/>') }} />
-          <pre style={{ background: "#1a1a1a", color: "#80cbc4", padding: "25px", borderRadius: "12px", marginTop: "20px", overflowX: "auto" }}>
-            <code>{markdown}</code>
-          </pre>
-        </div>
+        <pre
+          style={{
+            marginTop: 40,
+            background: "#111",
+            color: "#7ee787",
+            padding: 24,
+            borderRadius: 12,
+            overflowX: "auto",
+          }}
+        >
+          <code>{markdown}</code>
+        </pre>
       )}
     </div>
   )
