@@ -1,5 +1,83 @@
-*, *::after, *::before {
+*,
+*::after,
+*::before {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+
+
+/* Editor.js Customizations */
+/* Hide the default plus button and drag handle/settings button */
+/* We do NOT hide .ce-toolbar__actions entirely because it contains the toolbox popover */
+.ce-toolbar__plus,
+.ce-toolbar__settings-btn {
+  display: none !important;
+}
+
+/* Ensure the toolbox/popover (triggered by /) is visible and on top */
+.ce-popover {
+  z-index: 10001 !important;
+  pointer-events: auto !important;
+}
+
+
+
+.ce-inline-toolbar--showed {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.editor-container.hand-mode {
+  pointer-events: none;
+  user-select: none;
+}
+
+.codex-editor__redactor {
+  padding-bottom: 300px !important;
+}
+
+.ce-inline-toolbar {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e2e2 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 6px !important;
+  color: #333 !important;
+}
+
+.ce-inline-toolbar__toggler-and-button-wrapper {
+  padding-right: 0 !important;
+}
+
+.ce-inline-tool {
+  color: #333 !important;
+  border-radius: 6px !important;
+  width: 32px !important;
+  height: 32px !important;
+  transition: all 0.2s ease;
+}
+
+.ce-inline-tool:hover {
+  background-color: #f1f5f9 !important;
+  color: #000 !important;
+}
+
+.ce-inline-tool--active {
+  color: #0070f3 !important;
+  background-color: #e0f2fe !important;
+}
+
+.ce-inline-toolbar__input {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  color: #333 !important;
+  margin-top: 5px !important;
+}
+
+.editor-container {
+  position: relative;
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 // @ts-ignore
-import EditorJS, { type OutputData, type BlockTool } from "@editorjs/editorjs"
+import EditorJS, { type BlockTool } from "@editorjs/editorjs"
 // @ts-ignore
 import Header from "@editorjs/header"
 // @ts-ignore
@@ -31,6 +31,14 @@ import Delimiter from "@editorjs/delimiter"
 import DragDrop from "editorjs-drag-drop"
 
 import StrikethroughInline from "./strikethrough"
+import {
+  Type,
+  Image as ImageIcon,
+  Video,
+  Volume2,
+  Youtube,
+  Hand,
+} from "lucide-react"
 
 const EDITOR_HOLDER_ID = "editorjs"
 class LiveMediaTool implements BlockTool {
@@ -115,50 +123,12 @@ class LiveMediaTool implements BlockTool {
   }
 }
 
-const convertToMarkdown = (data: OutputData): string => {
-  let markdown = ""
-
-  data.blocks.forEach((block) => {
-    if (block.type.match(/^h[1-6]$/)) {
-      const level = Number(block.type.charAt(1))
-      markdown += `${"#".repeat(level)} ${block.data.text}\n\n`
-      return
-    }
-
-    switch (block.type) {
-      case "header":
-        markdown += `${"#".repeat(block.data.level || 2)} ${
-          block.data.text
-        }\n\n`
-        break
-      case "paragraph":
-        markdown += `${block.data.text}\n\n`
-        break
-      case "media":
-        const tag = block.data.type === "video" ? "video" : "audio"
-        markdown += `<${tag} controls src="${block.data.url}"></${tag}>\n`
-        if (block.data.description) {
-          markdown += `*${block.data.description.replace(
-            /<[^>]*>/g,
-            ""
-          )}*\n\n`
-        }
-        break
-      case "delimiter":
-        markdown += `---\n\n`
-        break
-      default:
-        if (block.data?.text) markdown += `${block.data.text}\n\n`
-    }
-  })
-
-  return markdown.trim()
-}
-
 export default function Page() {
   const editorInstance = useRef<EditorJS | null>(null)
-  const [markdown, setMarkdown] = useState("")
-  const [showMarkdown, setShowMarkdown] = useState(false)
+
+  const [isHandMode, setIsHandMode] = useState(false)
+  const isDragging = useRef(false)
+  const lastMousePosition = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     if (!editorInstance.current) initEditor()
@@ -168,6 +138,49 @@ export default function Page() {
       editorInstance.current = null
     }
   }, [])
+
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!isHandMode) return
+      isDragging.current = true
+      lastMousePosition.current = { x: e.clientX, y: e.clientY }
+      document.body.style.cursor = "grabbing"
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isHandMode || !isDragging.current) return
+
+      const deltaX = e.clientX - lastMousePosition.current.x
+      const deltaY = e.clientY - lastMousePosition.current.y
+
+      window.scrollBy(-deltaX, -deltaY)
+
+      lastMousePosition.current = { x: e.clientX, y: e.clientY }
+    }
+
+    const handleMouseUp = () => {
+      isDragging.current = false
+      if (isHandMode) {
+        document.body.style.cursor = "grab"
+      }
+    }
+
+    if (isHandMode) {
+      document.body.style.cursor = "grab"
+      window.addEventListener("mousedown", handleMouseDown)
+      window.addEventListener("mousemove", handleMouseMove)
+      window.addEventListener("mouseup", handleMouseUp)
+    } else {
+      document.body.style.cursor = "auto"
+    }
+
+    return () => {
+      window.removeEventListener("mousedown", handleMouseDown)
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
+      document.body.style.cursor = "auto"
+    }
+  }, [isHandMode])
 
   const initEditor = () => {
     const editor = new EditorJS({
@@ -213,74 +226,152 @@ export default function Page() {
         inlineCode: InlineCode,
         marker: Marker,
         underline: Underline,
+        image: {
+          class: ImageTool,
+          config: {
+            uploader: {
+              async uploadByFile(file: File) {
+                return new Promise((resolve) => {
+                  const reader = new FileReader()
+                  reader.onload = () => {
+                    resolve({
+                      success: 1,
+                      file: {
+                        url: reader.result as string,
+                      },
+                    })
+                  }
+                  reader.readAsDataURL(file)
+                })
+              },
+            },
+          },
+        },
+        embed: Embed,
       },
     })
 
     editorInstance.current = editor
   }
 
-  const handleSave = async () => {
-    const data = await editorInstance.current?.save()
-    if (data) {
-      setMarkdown(convertToMarkdown(data))
-      setShowMarkdown(true)
+  const insertBlock = (tool: string, data: any = {}) => {
+    if (editorInstance.current) {
+      // Special handling for paragraph to avoid multiple empty blocks
+      if (tool === 'paragraph') {
+        const index = editorInstance.current.blocks.getCurrentBlockIndex()
+        const block = editorInstance.current.blocks.getBlockByIndex(index)
+
+        // If current block is paragraph and is empty, just focus it
+        if (block?.name === 'paragraph' && block.isEmpty) {
+          editorInstance.current.caret.setToBlock(index)
+          return
+        }
+      }
+
+      editorInstance.current.blocks.insert(tool, data)
     }
+  }
+
+  const toggleHandMode = () => {
+    setIsHandMode(!isHandMode)
   }
 
   return (
     <div style={{ padding: 40, maxWidth: 850, margin: "0 auto" }}>
-      {/* 🔥 REMOVE PLUS MENU */}
-      <style>{`
-        .ce-toolbar__plus {
-          display: none !important;
-        }
-        .ce-toolbar__actions {
-          margin-left: 0 !important;
-        }
-      `}</style>
+      <div className={`editor-container ${isHandMode ? 'hand-mode' : ''}`} style={{ maxWidth: 850, margin: "0 auto", position: 'relative' }}>
 
-      <div
-        id={EDITOR_HOLDER_ID}
-        style={{
-          border: "1px solid #e0e0e0",
-          padding: 30,
-          borderRadius: 16,
-          minHeight: 450,
-          background: "#fff",
-        }}
-      />
-
-      <div style={{ textAlign: "center", marginTop: 30 }}>
-        <button
-          onClick={handleSave}
-          style={{
-            padding: "14px 32px",
-            background: "#0070f3",
-            color: "#fff",
-            borderRadius: 10,
-            border: "none",
-            cursor: "pointer",
+        {/* Top "Add Cover" Button */}
+        <div style={{
+          position: "absolute",
+          top: -40,
+          left: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}>
+          <button style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 16px',
+            background: '#f3f4f6',
+            border: 'none',
+            borderRadius: '99px',
+            color: '#4b5563',
+            fontSize: '12px',
             fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'background 0.2s'
+          }}>
+            <div style={{ width: 8, height: 8, background: '#374151', borderRadius: '50%' }} />
+            ADD COVER
+          </button>
+        </div>
+
+        <div
+          id={EDITOR_HOLDER_ID}
+          style={{
+            minHeight: 450,
+            background: "#fff",
+            paddingTop: 20
+          }}
+        />
+      </div>
+
+      {/* Floating Bottom Toolbar */}
+      <div style={{
+        position: 'fixed',
+        bottom: 40,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'white',
+        padding: '10px 24px',
+        borderRadius: 999,
+        boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
+        display: 'flex',
+        gap: 24,
+        alignItems: 'center',
+        zIndex: 9999,
+        border: '1px solid #f0f0f0'
+      }}>
+        <button onClick={() => insertBlock('paragraph')} title="Text" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+          <Type size={20} />
+        </button>
+
+        <button onClick={() => insertBlock('image')} title="Image" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+          <ImageIcon size={20} />
+        </button>
+
+        <button onClick={() => insertBlock('media', { type: 'video' })} title="Video" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+          <Video size={20} />
+        </button>
+
+        <button onClick={() => insertBlock('media', { type: 'audio' })} title="Audio" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+          <Volume2 size={20} />
+        </button>
+
+        <button onClick={() => insertBlock('embed')} title="Embed/Youtube" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+          <Youtube size={20} />
+        </button>
+
+        <div style={{ width: 1, height: 24, background: '#eee' }}></div>
+
+        <button
+          onClick={toggleHandMode}
+          title="Hand/Drag"
+          style={{
+            background: isHandMode ? '#e0f2fe' : 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: isHandMode ? '#0070f3' : '#444',
+            borderRadius: 6,
+            padding: 4
           }}
         >
-          Preview Content
+          <Hand size={20} />
         </button>
       </div>
 
-      {showMarkdown && (
-        <pre
-          style={{
-            marginTop: 40,
-            background: "#111",
-            color: "#7ee787",
-            padding: 24,
-            borderRadius: 12,
-            overflowX: "auto",
-          }}
-        >
-          <code>{markdown}</code>
-        </pre>
-      )}
     </div>
   )
 }
