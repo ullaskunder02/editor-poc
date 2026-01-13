@@ -42,9 +42,6 @@ import {
 
 const EDITOR_HOLDER_ID = "editorjs"
 class LiveMediaTool implements BlockTool {
-  static get toolbox() {
-    return { title: "Video / Audio", icon: "🎥" }
-  }
 
   private data: any
   private wrapper: HTMLElement
@@ -126,22 +123,31 @@ class LiveMediaTool implements BlockTool {
 export default function EditorComponent() {
   const editorInstance = useRef<EditorJS | null>(null)
 
+  const holderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!editorInstance.current) initEditor()
 
     return () => {
-      editorInstance.current?.destroy()
+      if (editorInstance.current && typeof editorInstance.current.destroy === 'function') {
+        try {
+          editorInstance.current.destroy()
+        } catch (e) {
+          console.error("Error destroying editor instance:", e)
+        }
+      }
       editorInstance.current = null
     }
   }, [])
 
-
-
-
   const initEditor = () => {
+    if (!holderRef.current) return
+
+    // Clean up any existing content in the holder to prevent duplicates
+    holderRef.current.innerHTML = ""
+
     const editor = new EditorJS({
-      holder: EDITOR_HOLDER_ID,
+      holder: holderRef.current,
       placeholder: "Press '/' for tools...",
 
       onReady: () => {
@@ -272,6 +278,7 @@ export default function EditorComponent() {
 
         <div
           id={EDITOR_HOLDER_ID}
+          ref={holderRef}
           style={{
             minHeight: 450,
             background: "#fff",
