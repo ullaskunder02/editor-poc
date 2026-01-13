@@ -6,17 +6,20 @@
   box-sizing: border-box;
 }
 
-
+/* we will not do !important bad idea */
 
 /* Editor.js Customizations */
 /* Hide the default plus button and drag handle/settings button */
 /* We do NOT hide .ce-toolbar__actions entirely because it contains the toolbox popover */
-.ce-toolbar__plus,
-.ce-toolbar__settings-btn {
+/* from editor.js doc */
+.ce-toolbar__plus {
   display: none !important;
 }
 
-/* Ensure the toolbox/popover (triggered by /) is visible and on top */
+.ce-toolbar__settings-btn {
+  display: flex !important;
+}
+
 .ce-popover {
   z-index: 10001 !important;
   pointer-events: auto !important;

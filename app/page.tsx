@@ -126,9 +126,6 @@ class LiveMediaTool implements BlockTool {
 export default function Page() {
   const editorInstance = useRef<EditorJS | null>(null)
 
-  const [isHandMode, setIsHandMode] = useState(false)
-  const isDragging = useRef(false)
-  const lastMousePosition = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     if (!editorInstance.current) initEditor()
@@ -139,48 +136,8 @@ export default function Page() {
     }
   }, [])
 
-  useEffect(() => {
-    const handleMouseDown = (e: MouseEvent) => {
-      if (!isHandMode) return
-      isDragging.current = true
-      lastMousePosition.current = { x: e.clientX, y: e.clientY }
-      document.body.style.cursor = "grabbing"
-    }
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isHandMode || !isDragging.current) return
 
-      const deltaX = e.clientX - lastMousePosition.current.x
-      const deltaY = e.clientY - lastMousePosition.current.y
-
-      window.scrollBy(-deltaX, -deltaY)
-
-      lastMousePosition.current = { x: e.clientX, y: e.clientY }
-    }
-
-    const handleMouseUp = () => {
-      isDragging.current = false
-      if (isHandMode) {
-        document.body.style.cursor = "grab"
-      }
-    }
-
-    if (isHandMode) {
-      document.body.style.cursor = "grab"
-      window.addEventListener("mousedown", handleMouseDown)
-      window.addEventListener("mousemove", handleMouseMove)
-      window.addEventListener("mouseup", handleMouseUp)
-    } else {
-      document.body.style.cursor = "auto"
-    }
-
-    return () => {
-      window.removeEventListener("mousedown", handleMouseDown)
-      window.removeEventListener("mousemove", handleMouseMove)
-      window.removeEventListener("mouseup", handleMouseUp)
-      document.body.style.cursor = "auto"
-    }
-  }, [isHandMode])
 
   const initEditor = () => {
     const editor = new EditorJS({
@@ -216,18 +173,25 @@ export default function Page() {
           onReady: () => console.log("Strikethrough tool is ready"),
 
         },
-        media: LiveMediaTool,
+        media: {
+          class: LiveMediaTool,
+          toolbox: false as any, // Hides from toolbox
+        },
         list: List,
         checklist: Checklist,
         table: Table,
         quote: Quote,
         code: Code,
-        delimiter: Delimiter,
+        delimiter: {
+          class: Delimiter,
+          toolbox: { title: "Divider" },
+        },
         inlineCode: InlineCode,
         marker: Marker,
         underline: Underline,
         image: {
           class: ImageTool,
+          toolbox: false as any,
           config: {
             uploader: {
               async uploadByFile(file: File) {
@@ -272,13 +236,11 @@ export default function Page() {
     }
   }
 
-  const toggleHandMode = () => {
-    setIsHandMode(!isHandMode)
-  }
+
 
   return (
     <div style={{ padding: 40, maxWidth: 850, margin: "0 auto" }}>
-      <div className={`editor-container ${isHandMode ? 'hand-mode' : ''}`} style={{ maxWidth: 850, margin: "0 auto", position: 'relative' }}>
+      <div className="editor-container" style={{ maxWidth: 850, margin: "0 auto", position: 'relative' }}>
 
         {/* Top "Add Cover" Button */}
         <div style={{
@@ -354,22 +316,6 @@ export default function Page() {
           <Youtube size={20} />
         </button>
 
-        <div style={{ width: 1, height: 24, background: '#eee' }}></div>
-
-        <button
-          onClick={toggleHandMode}
-          title="Hand/Drag"
-          style={{
-            background: isHandMode ? '#e0f2fe' : 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: isHandMode ? '#0070f3' : '#444',
-            borderRadius: 6,
-            padding: 4
-          }}
-        >
-          <Hand size={20} />
-        </button>
       </div>
 
     </div>
