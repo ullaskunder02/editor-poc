@@ -40,6 +40,8 @@ import {
   X,
   Link,
   Clock,
+  Trash2,
+  Upload,
 } from 'lucide-react'
 import DividerTool from './Divider'
 import YoutubeModal from './YoutubeModal'
@@ -133,6 +135,8 @@ class LiveMediaTool implements BlockTool {
 export default function EditorComponent() {
   const editorInstance = useRef<EditorJS | null>(null)
   const [showYoutubeModal, setShowYoutubeModal] = useState(false)
+  const [coverImage, setCoverImage] = useState<string | null>(null)
+  const [isHoveringCover, setIsHoveringCover] = useState(false)
 
   const holderRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -270,7 +274,7 @@ export default function EditorComponent() {
   const triggerFileSelect = (type: string) => {
     activeMediaType.current = type
     if (fileInputRef.current) {
-      if (type === 'image') fileInputRef.current.accept = 'image/*'
+      if (type === 'image' || type === 'cover') fileInputRef.current.accept = 'image/*'
       else if (type === 'video') fileInputRef.current.accept = 'video/*'
       else if (type === 'audio') fileInputRef.current.accept = 'audio/*'
       else fileInputRef.current.accept = '*/*'
@@ -295,6 +299,8 @@ export default function EditorComponent() {
           editorInstance.current.blocks.insert('image', {
             file: { url },
           })
+        } else if (type === 'cover') {
+          setCoverImage(url)
         } else {
           editorInstance.current.blocks.insert('media', {
             url,
@@ -302,6 +308,9 @@ export default function EditorComponent() {
             name: file.name,
           })
         }
+      } else if (type === 'cover') {
+        // Allow setting cover even if editor not fully ready (though it should be)
+        setCoverImage(url)
       }
     }
     reader.readAsDataURL(file)
@@ -339,49 +348,151 @@ export default function EditorComponent() {
   }
 
   return (
-    <div style={{ padding: 40, maxWidth: 850, margin: '0 auto' }}>
-      <div
-        className="editor-container"
-        style={{ maxWidth: 850, margin: '0 auto', position: 'relative' }}
-      >
-        {/* Top "Add Cover" Button */}
+    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#fff' }}>
+      {/* Cover Image Area */}
+      {coverImage && (
         <div
           style={{
-            position: 'absolute',
-            top: -40,
-            left: 0,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
+            width: '100%',
+            height: '30vh',
+            minHeight: '200px',
+            position: 'relative',
+            backgroundColor: '#f6f6f6',
           }}
+          onMouseEnter={() => setIsHoveringCover(true)}
+          onMouseLeave={() => setIsHoveringCover(false)}
         >
-          <button
+          <img
+            src={coverImage}
+            alt="Cover"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 16px',
-              background: '#f3f4f6',
-              border: 'none',
-              borderRadius: '99px',
-              color: '#4b5563',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'background 0.2s',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
             }}
-          >
+          />
+
+          {/* Cover Controls */}
+          {isHoveringCover && (
             <div
               style={{
-                width: 8,
-                height: 8,
-                background: '#374151',
-                borderRadius: '50%',
+                position: 'absolute',
+                bottom: 20,
+                right: 40,
+                display: 'flex',
+                gap: 8,
+                zIndex: 10,
               }}
-            />
-            ADD COVER
-          </button>
+            >
+              <button
+                onClick={() => triggerFileSelect('cover')}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  borderRadius: '4px',
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: '#37352f',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  transition: 'background 0.1s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#fff')}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)')
+                }
+              >
+                <Upload size={14} />
+                Change cover
+              </button>
+              <button
+                onClick={() => setCoverImage(null)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  borderRadius: '4px',
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: '#37352f',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  transition: 'background 0.1s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#fff')}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)')
+                }
+              >
+                <Trash2 size={14} />
+                Remove
+              </button>
+            </div>
+          )}
         </div>
+      )}
+
+      <div
+        className="editor-container"
+        style={{ maxWidth: 850, margin: '0 auto', position: 'relative', padding: '40px' }}
+      >
+        {!coverImage && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 40, // Match padding
+              zIndex: 5,
+            }}
+          >
+            <button
+              onClick={() => triggerFileSelect('cover')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 12px',
+                background: 'none',
+                border: 'none',
+                borderRadius: '4px',
+                color: '#9ca3af',
+                fontSize: '13px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = '#eff1f3'
+                e.currentTarget.style.color = '#374151'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'none'
+                e.currentTarget.style.color = '#9ca3af'
+              }}
+            >
+              <div
+                style={{
+                  width: 14,
+                  height: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <ImageIcon size={14} />
+              </div>
+              Add cover
+            </button>
+          </div>
+        )}
 
         <div
           id={EDITOR_HOLDER_ID}
@@ -392,7 +503,7 @@ export default function EditorComponent() {
             paddingTop: 20,
           }}
         />
-      </div>
+      </div >
 
       <input
         type="file"
@@ -490,6 +601,6 @@ export default function EditorComponent() {
           <Youtube size={20} />
         </button>
       </div>
-    </div>
+    </div >
   )
 }
