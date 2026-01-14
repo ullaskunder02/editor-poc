@@ -1,34 +1,34 @@
-"use client"
+'use client'
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from 'react'
 // @ts-ignore
-import EditorJS, { type BlockTool } from "@editorjs/editorjs"
+import EditorJS, { type BlockTool } from '@editorjs/editorjs'
 // @ts-ignore
-import Header from "@editorjs/header"
+import Header from '@editorjs/header'
 // @ts-ignore
-import List from "@editorjs/list"
+import List from '@editorjs/list'
 // @ts-ignore
-import Checklist from "@editorjs/checklist"
+import Checklist from '@editorjs/checklist'
 // @ts-ignore
-import Table from "@editorjs/table"
+import Table from '@editorjs/table'
 // @ts-ignore
-import Code from "@editorjs/code"
+import Code from '@editorjs/code'
 // @ts-ignore
-import InlineCode from "@editorjs/inline-code"
+import InlineCode from '@editorjs/inline-code'
 // @ts-ignore
-import Underline from "@editorjs/underline"
+import Underline from '@editorjs/underline'
 // @ts-ignore
-import Marker from "@editorjs/marker"
+import Marker from '@editorjs/marker'
 // @ts-ignore
-import ImageTool from "@editorjs/image"
+import ImageTool from '@editorjs/image'
 // @ts-ignore
-import Embed from "@editorjs/embed"
+import Embed from '@editorjs/embed'
 // @ts-ignore
-import Quote from "@editorjs/quote"
+import Quote from '@editorjs/quote'
 // @ts-ignore
-import DragDrop from "editorjs-drag-drop"
+import DragDrop from 'editorjs-drag-drop'
 
-import StrikethroughInline from "./strikethrough"
+import StrikethroughInline from './strikethrough'
 
 import {
   Type,
@@ -37,33 +37,43 @@ import {
   Volume2,
   Youtube,
   Hand,
-} from "lucide-react"
-import DividerTool from "./Divider"
+  X,
+  Link,
+  Clock,
+} from 'lucide-react'
+import DividerTool from './Divider'
+import YoutubeModal from './YoutubeModal'
 
-const EDITOR_HOLDER_ID = "editorjs"
+// Helper to extract Youtube ID
+const getYoutubeId = (url: string) => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+  const match = url.match(regExp)
+  return match && match[2].length === 11 ? match[2] : null
+}
+
+const EDITOR_HOLDER_ID = 'editorjs'
 class LiveMediaTool implements BlockTool {
-
   private data: any
   private wrapper: HTMLElement
   private descriptionField: HTMLElement | null = null
 
   constructor({ data }: { data: any }) {
-    this.data = data || { url: "", type: "", name: "", description: "" }
-    this.wrapper = document.createElement("div")
+    this.data = data || { url: '', type: '', name: '', description: '' }
+    this.wrapper = document.createElement('div')
   }
 
   render() {
-    this.wrapper.style.padding = "15px"
-    this.wrapper.style.border = "1px solid #f0f0f0"
-    this.wrapper.style.borderRadius = "10px"
+    this.wrapper.style.padding = '15px'
+    this.wrapper.style.border = '1px solid #f0f0f0'
+    this.wrapper.style.borderRadius = '10px'
 
     if (this.data.url) {
       this._renderPlayer(this.data.url, this.data.type)
     } else {
-      const input = document.createElement("input")
-      input.type = "file"
-      input.accept = "video/*,audio/*"
-      input.style.display = "none"
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = 'video/*,audio/*'
+      input.style.display = 'none'
 
       input.onchange = (e: any) => {
         const file = e.target.files[0]
@@ -72,7 +82,7 @@ class LiveMediaTool implements BlockTool {
         const reader = new FileReader()
         reader.onload = (event) => {
           const url = event.target?.result as string
-          const type = file.type.startsWith("video") ? "video" : "audio"
+          const type = file.type.startsWith('video') ? 'video' : 'audio'
           this.data = { ...this.data, url, type, name: file.name }
           this._renderPlayer(url, type)
         }
@@ -86,22 +96,22 @@ class LiveMediaTool implements BlockTool {
     return this.wrapper
   }
 
-  _renderPlayer(url: string, type: "video" | "audio") {
-    this.wrapper.innerHTML = ""
+  _renderPlayer(url: string, type: 'video' | 'audio') {
+    this.wrapper.innerHTML = ''
 
     const media = document.createElement(type)
     media.src = url
     media.controls = true
-    media.style.width = "100%"
+    media.style.width = '100%'
 
-    const desc = document.createElement("div")
-    desc.contentEditable = "true"
-    desc.dataset.placeholder = "Add a description..."
-    desc.innerHTML = this.data.description || ""
+    const desc = document.createElement('div')
+    desc.contentEditable = 'true'
+    desc.dataset.placeholder = 'Add a description...'
+    desc.innerHTML = this.data.description || ''
     desc.style.cssText =
-      "margin-top:10px;padding:8px;border-left:2px solid #0070f3;"
+      'margin-top:10px;padding:8px;border-left:2px solid #0070f3;'
 
-    desc.addEventListener("input", () => {
+    desc.addEventListener('input', () => {
       this.data.description = desc.innerHTML
     })
 
@@ -122,8 +132,12 @@ class LiveMediaTool implements BlockTool {
 
 export default function EditorComponent() {
   const editorInstance = useRef<EditorJS | null>(null)
+  const [showYoutubeModal, setShowYoutubeModal] = useState(false)
 
   const holderRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const activeMediaType = useRef<string | null>(null)
+
 
   useEffect(() => {
     if (!editorInstance.current) {
@@ -131,7 +145,10 @@ export default function EditorComponent() {
     }
 
     return () => {
-      if (editorInstance.current && typeof editorInstance.current.destroy === 'function') {
+      if (
+        editorInstance.current &&
+        typeof editorInstance.current.destroy === 'function'
+      ) {
         const editorToDestroy = editorInstance.current
         editorInstance.current = null // Allow new instance to be created immediately if needed
 
@@ -142,7 +159,7 @@ export default function EditorComponent() {
               editorToDestroy.destroy()
             })
             .catch((e) => {
-              console.error("Error destroying editor instance:", e)
+              console.error('Error destroying editor instance:', e)
             })
         }
       }
@@ -153,7 +170,7 @@ export default function EditorComponent() {
     if (!holderRef.current) return
 
     // Clean up any existing content in the holder to prevent duplicates
-    holderRef.current.innerHTML = ""
+    holderRef.current.innerHTML = ''
 
     const editor = new EditorJS({
       holder: holderRef.current,
@@ -167,26 +184,25 @@ export default function EditorComponent() {
       tools: {
         h1: {
           class: Header,
-          toolbox: { title: "Main Title", icon: "<b>H1</b>" },
+          toolbox: { title: 'Main Title', icon: '<b>H1</b>' },
           config: { levels: [1], defaultLevel: 1 },
-          shortcut: "CMD+SHIFT+X",
-          onReady: () => console.log("h1 tool is ready"),
+          shortcut: 'CMD+SHIFT+X',
+          onReady: () => console.log('h1 tool is ready'),
         },
         h2: {
           class: Header,
-          toolbox: { title: "Subtitle", icon: "<b>H2</b>" },
+          toolbox: { title: 'Subtitle', icon: '<b>H2</b>' },
           config: { levels: [2], defaultLevel: 2 },
         },
         h3: {
           class: Header,
-          toolbox: { title: "Section", icon: "<b>H3</b>" },
+          toolbox: { title: 'Section', icon: '<b>H3</b>' },
           config: { levels: [3], defaultLevel: 3 },
         },
         strikethrough: {
           class: StrikethroughInline,
-          shortcut: "CMD+SHIFT+S",
-          onReady: () => console.log("Strikethrough tool is ready"),
-
+          shortcut: 'CMD+SHIFT+S',
+          onReady: () => console.log('Strikethrough tool is ready'),
         },
         media: {
           class: LiveMediaTool,
@@ -199,7 +215,7 @@ export default function EditorComponent() {
         code: Code,
         delimiter: {
           class: DividerTool,
-          toolbox: { title: "Divider" },
+          toolbox: { title: 'Divider' },
         },
         inlineCode: InlineCode,
         marker: Marker,
@@ -251,16 +267,13 @@ export default function EditorComponent() {
     }
   }
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const activeMediaType = useRef<string | null>(null)
-
   const triggerFileSelect = (type: string) => {
     activeMediaType.current = type
     if (fileInputRef.current) {
-      if (type === 'image') fileInputRef.current.accept = "image/*"
-      else if (type === 'video') fileInputRef.current.accept = "video/*"
-      else if (type === 'audio') fileInputRef.current.accept = "audio/*"
-      else fileInputRef.current.accept = "*/*"
+      if (type === 'image') fileInputRef.current.accept = 'image/*'
+      else if (type === 'video') fileInputRef.current.accept = 'video/*'
+      else if (type === 'audio') fileInputRef.current.accept = 'audio/*'
+      else fileInputRef.current.accept = '*/*'
 
       fileInputRef.current.click()
     }
@@ -280,13 +293,13 @@ export default function EditorComponent() {
       if (editorInstance.current) {
         if (type === 'image') {
           editorInstance.current.blocks.insert('image', {
-            file: { url }
+            file: { url },
           })
         } else {
           editorInstance.current.blocks.insert('media', {
             url,
             type: type, // 'video' or 'audio'
-            name: file.name
+            name: file.name,
           })
         }
       }
@@ -295,36 +308,77 @@ export default function EditorComponent() {
     e.target.value = ''
   }
 
+  const handleYoutubeSubmit = (
+    ytUrl: string,
+    ytStart: string,
+    ytEnd: string
+  ) => {
+    if (!ytUrl) return
 
+    const videoId = getYoutubeId(ytUrl)
+    if (videoId && editorInstance.current) {
+      let embedUrl = `https://www.youtube.com/embed/${videoId}`
+      const params = []
+      if (ytStart) params.push(`start=${ytStart}`)
+      if (ytEnd) params.push(`end=${ytEnd}`)
+
+      if (params.length > 0) {
+        embedUrl += `?${params.join('&')}`
+      }
+
+      editorInstance.current.blocks.insert('embed', {
+        service: 'youtube',
+        source: ytUrl,
+        embed: embedUrl,
+        width: 580,
+        height: 320,
+      })
+
+      setShowYoutubeModal(false)
+    }
+  }
 
   return (
-    <div style={{ padding: 40, maxWidth: 850, margin: "0 auto" }}>
-      <div className="editor-container" style={{ maxWidth: 850, margin: "0 auto", position: 'relative' }}>
-
+    <div style={{ padding: 40, maxWidth: 850, margin: '0 auto' }}>
+      <div
+        className="editor-container"
+        style={{ maxWidth: 850, margin: '0 auto', position: 'relative' }}
+      >
         {/* Top "Add Cover" Button */}
-        <div style={{
-          position: "absolute",
-          top: -40,
-          left: 0,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8
-        }}>
-          <button style={{
+        <div
+          style={{
+            position: 'absolute',
+            top: -40,
+            left: 0,
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            padding: '6px 16px',
-            background: '#f3f4f6',
-            border: 'none',
-            borderRadius: '99px',
-            color: '#4b5563',
-            fontSize: '12px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'background 0.2s'
-          }}>
-            <div style={{ width: 8, height: 8, background: '#374151', borderRadius: '50%' }} />
+          }}
+        >
+          <button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '6px 16px',
+              background: '#f3f4f6',
+              border: 'none',
+              borderRadius: '99px',
+              color: '#4b5563',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
+          >
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                background: '#374151',
+                borderRadius: '50%',
+              }}
+            />
             ADD COVER
           </button>
         </div>
@@ -334,8 +388,8 @@ export default function EditorComponent() {
           ref={holderRef}
           style={{
             minHeight: 450,
-            background: "#fff",
-            paddingTop: 20
+            background: '#fff',
+            paddingTop: 20,
           }}
         />
       </div>
@@ -347,44 +401,95 @@ export default function EditorComponent() {
         onChange={onFileChange}
       />
 
+      <YoutubeModal
+        isOpen={showYoutubeModal}
+        onClose={() => setShowYoutubeModal(false)}
+        onSubmit={handleYoutubeSubmit}
+      />
+
       {/* Floating Bottom Toolbar */}
-      <div style={{
-        position: 'fixed',
-        bottom: 40,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'white',
-        padding: '10px 24px',
-        borderRadius: 999,
-        boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
-        display: 'flex',
-        gap: 24,
-        alignItems: 'center',
-        zIndex: 9999,
-        border: '1px solid #f0f0f0'
-      }}>
-        <button onClick={() => insertBlock('paragraph')} title="Text" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 40,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'white',
+          padding: '10px 24px',
+          borderRadius: 999,
+          boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
+          display: 'flex',
+          gap: 24,
+          alignItems: 'center',
+          zIndex: 9999,
+          border: '1px solid #f0f0f0',
+        }}
+      >
+        <button
+          onClick={() => insertBlock('paragraph')}
+          title="Text"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#444',
+          }}
+        >
           <Type size={20} />
         </button>
 
-        <button onClick={() => triggerFileSelect('image')} title="Image" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+        <button
+          onClick={() => triggerFileSelect('image')}
+          title="Image"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#444',
+          }}
+        >
           <ImageIcon size={20} />
         </button>
 
-        <button onClick={() => triggerFileSelect('video')} title="Video" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+        <button
+          onClick={() => triggerFileSelect('video')}
+          title="Video"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#444',
+          }}
+        >
           <Video size={20} />
         </button>
 
-        <button onClick={() => triggerFileSelect('audio')} title="Audio" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+        <button
+          onClick={() => triggerFileSelect('audio')}
+          title="Audio"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#444',
+          }}
+        >
           <Volume2 size={20} />
         </button>
 
-        <button onClick={() => insertBlock('embed')} title="Embed/Youtube" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+        <button
+          onClick={() => setShowYoutubeModal(true)}
+          title="Embed/Youtube"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#444',
+          }}
+        >
           <Youtube size={20} />
         </button>
-
       </div>
-
     </div>
   )
 }

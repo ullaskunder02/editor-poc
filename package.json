@@ -6,6 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
+    "format": "prettier --write .",
     "start": "next start"
   },
   "dependencies": {
@@ -61,6 +62,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
+    "prettier": "^3.7.4",
     "typescript": "^5"
   }
 }
