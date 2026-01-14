@@ -45,6 +45,7 @@ import {
 } from 'lucide-react'
 import DividerTool from './Divider'
 import YoutubeModal from './YoutubeModal'
+import CoverModal from './CoverModal'
 
 // Helper to extract Youtube ID
 const getYoutubeId = (url: string) => {
@@ -135,6 +136,7 @@ class LiveMediaTool implements BlockTool {
 export default function EditorComponent() {
   const editorInstance = useRef<EditorJS | null>(null)
   const [showYoutubeModal, setShowYoutubeModal] = useState(false)
+  const [showCoverModal, setShowCoverModal] = useState(false)
   const [coverImage, setCoverImage] = useState<string | null>(null)
   const [isHoveringCover, setIsHoveringCover] = useState(false)
 
@@ -188,6 +190,7 @@ export default function EditorComponent() {
       tools: {
         h1: {
           class: Header,
+          inlineToolbar: true,
           toolbox: { title: 'Main Title', icon: '<b>H1</b>' },
           config: { levels: [1], defaultLevel: 1 },
           shortcut: 'CMD+SHIFT+X',
@@ -195,11 +198,13 @@ export default function EditorComponent() {
         },
         h2: {
           class: Header,
+          inlineToolbar: true,
           toolbox: { title: 'Subtitle', icon: '<b>H2</b>' },
           config: { levels: [2], defaultLevel: 2 },
         },
         h3: {
           class: Header,
+          inlineToolbar: true,
           toolbox: { title: 'Section', icon: '<b>H3</b>' },
           config: { levels: [3], defaultLevel: 3 },
         },
@@ -212,10 +217,19 @@ export default function EditorComponent() {
           class: LiveMediaTool,
           toolbox: false as any, // Hides from toolbox
         },
-        list: List,
-        checklist: Checklist,
+        list: {
+          class: List,
+          inlineToolbar: true,
+        },
+        checklist: {
+          class: Checklist,
+          inlineToolbar: true,
+        },
         table: Table,
-        quote: Quote,
+        quote: {
+          class: Quote,
+          inlineToolbar: true,
+        },
         code: Code,
         delimiter: {
           class: DividerTool,
@@ -271,8 +285,14 @@ export default function EditorComponent() {
     }
   }
 
-  const triggerFileSelect = (type: string) => {
+  const triggerFileSelect = (type: string, skipModal = false) => {
     activeMediaType.current = type
+
+    if (type === 'cover' && !skipModal) {
+      setShowCoverModal(true)
+      return
+    }
+
     if (fileInputRef.current) {
       if (type === 'image' || type === 'cover') fileInputRef.current.accept = 'image/*'
       else if (type === 'video') fileInputRef.current.accept = 'video/*'
@@ -281,6 +301,23 @@ export default function EditorComponent() {
 
       fileInputRef.current.click()
     }
+  }
+
+  const handleCoverLinkSubmit = (url: string) => {
+    setCoverImage(url)
+    setShowCoverModal(false)
+  }
+
+  const handleCoverUploadClick = () => {
+    // Determine if we should trigger file select immediately or through modal logic
+    // Actually we just want to trigger the file input now essentially 'skipping' the modal check
+    // but we can keep the modal open or close it? 
+    // Usually selecting file eventually closes it. 
+    // Let's trigger file select, and when file is selected, we close modal (in onFileChange)
+    triggerFileSelect('cover', true)
+    // We can close modal now or wait for file. Let's close modal when file is chosen or now.
+    // Notion keeps it open until file selected? No, native file picker blocks.
+    setShowCoverModal(false)
   }
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -516,6 +553,13 @@ export default function EditorComponent() {
         isOpen={showYoutubeModal}
         onClose={() => setShowYoutubeModal(false)}
         onSubmit={handleYoutubeSubmit}
+      />
+
+      <CoverModal
+        isOpen={showCoverModal}
+        onClose={() => setShowCoverModal(false)}
+        onUploadClick={handleCoverUploadClick}
+        onLinkSubmit={handleCoverLinkSubmit}
       />
 
       {/* Floating Bottom Toolbar */}
