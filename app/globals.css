@@ -80,7 +80,12 @@
 }
 
 .image-tool__caption {
-  margin-top: 10px !important;
+  position: relative !important;
+  border: none;
+  border-left: 2px solid rgb(0, 112, 243);
+  box-shadow: none;
+  border-radius: 0;
+  margin-bottom: 0 !important;
 }
 
 .image-tool__caption[data-placeholder]:empty:before {

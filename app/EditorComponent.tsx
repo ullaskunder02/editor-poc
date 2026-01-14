@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 // @ts-ignore
 import EditorJS, { type BlockTool } from "@editorjs/editorjs"
 // @ts-ignore
@@ -25,7 +25,6 @@ import ImageTool from "@editorjs/image"
 import Embed from "@editorjs/embed"
 // @ts-ignore
 import Quote from "@editorjs/quote"
-// @ts-ignore
 // @ts-ignore
 import DragDrop from "editorjs-drag-drop"
 
@@ -252,6 +251,50 @@ export default function EditorComponent() {
     }
   }
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const activeMediaType = useRef<string | null>(null)
+
+  const triggerFileSelect = (type: string) => {
+    activeMediaType.current = type
+    if (fileInputRef.current) {
+      if (type === 'image') fileInputRef.current.accept = "image/*"
+      else if (type === 'video') fileInputRef.current.accept = "video/*"
+      else if (type === 'audio') fileInputRef.current.accept = "audio/*"
+      else fileInputRef.current.accept = "*/*"
+
+      fileInputRef.current.click()
+    }
+  }
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const type = activeMediaType.current
+    if (!type) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const url = event.target?.result as string
+
+      if (editorInstance.current) {
+        if (type === 'image') {
+          editorInstance.current.blocks.insert('image', {
+            file: { url }
+          })
+        } else {
+          editorInstance.current.blocks.insert('media', {
+            url,
+            type: type, // 'video' or 'audio'
+            name: file.name
+          })
+        }
+      }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
 
 
   return (
@@ -297,6 +340,13 @@ export default function EditorComponent() {
         />
       </div>
 
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        onChange={onFileChange}
+      />
+
       {/* Floating Bottom Toolbar */}
       <div style={{
         position: 'fixed',
@@ -317,15 +367,15 @@ export default function EditorComponent() {
           <Type size={20} />
         </button>
 
-        <button onClick={() => insertBlock('image')} title="Image" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+        <button onClick={() => triggerFileSelect('image')} title="Image" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
           <ImageIcon size={20} />
         </button>
 
-        <button onClick={() => insertBlock('media', { type: 'video' })} title="Video" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+        <button onClick={() => triggerFileSelect('video')} title="Video" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
           <Video size={20} />
         </button>
 
-        <button onClick={() => insertBlock('media', { type: 'audio' })} title="Audio" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
+        <button onClick={() => triggerFileSelect('audio')} title="Audio" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444' }}>
           <Volume2 size={20} />
         </button>
 
