@@ -26,11 +26,11 @@ import Embed from "@editorjs/embed"
 // @ts-ignore
 import Quote from "@editorjs/quote"
 // @ts-ignore
-import Delimiter from "@editorjs/delimiter"
 // @ts-ignore
 import DragDrop from "editorjs-drag-drop"
 
 import StrikethroughInline from "./strikethrough"
+
 import {
   Type,
   Image as ImageIcon,
@@ -39,6 +39,7 @@ import {
   Youtube,
   Hand,
 } from "lucide-react"
+import DividerTool from "./Divider"
 
 const EDITOR_HOLDER_ID = "editorjs"
 class LiveMediaTool implements BlockTool {
@@ -126,17 +127,26 @@ export default function EditorComponent() {
   const holderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!editorInstance.current) initEditor()
+    if (!editorInstance.current) {
+      initEditor()
+    }
 
     return () => {
       if (editorInstance.current && typeof editorInstance.current.destroy === 'function') {
-        try {
-          editorInstance.current.destroy()
-        } catch (e) {
-          console.error("Error destroying editor instance:", e)
+        const editorToDestroy = editorInstance.current
+        editorInstance.current = null // Allow new instance to be created immediately if needed
+
+        // Wait for ready before destroying to avoid "not ready" errors which leave ghost instances
+        if (editorToDestroy.isReady) {
+          editorToDestroy.isReady
+            .then(() => {
+              editorToDestroy.destroy()
+            })
+            .catch((e) => {
+              console.error("Error destroying editor instance:", e)
+            })
         }
       }
-      editorInstance.current = null
     }
   }, [])
 
@@ -189,7 +199,7 @@ export default function EditorComponent() {
         quote: Quote,
         code: Code,
         delimiter: {
-          class: Delimiter,
+          class: DividerTool,
           toolbox: { title: "Divider" },
         },
         inlineCode: InlineCode,

@@ -42,25 +42,8 @@
   padding-bottom: 300px !important;
 }
 
-.ce-inline-toolbar {
-  background-color: #ffffff !important;
-  border: 1px solid #e2e2e2 !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
-  border-radius: 12px !important;
-  padding: 6px !important;
-  color: #333 !important;
-}
-
 .ce-inline-toolbar__toggler-and-button-wrapper {
   padding-right: 0 !important;
-}
-
-.ce-inline-tool {
-  color: #333 !important;
-  border-radius: 6px !important;
-  width: 32px !important;
-  height: 32px !important;
-  transition: all 0.2s ease;
 }
 
 .ce-inline-tool:hover {
@@ -73,14 +56,33 @@
   background-color: #e0f2fe !important;
 }
 
-.ce-inline-toolbar__input {
-  background-color: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 6px !important;
-  color: #333 !important;
-  margin-top: 5px !important;
-}
-
 .editor-container {
   position: relative;
+}
+
+/* 
+  Override default Editor.js delimiter style.
+  The default delimiter tool uses '***' in a ::before element.
+  We want to ensure this doesn't show up, as we are using a custom HR divider.
+*/
+.ce-delimiter:before {
+  content: "" !important;
+  display: none !important;
+}
+
+/* 
+  Custom styling for Image Tool to match Media Tool UI
+*/
+.image-tool {
+  padding: 15px !important;
+  border: 1px solid #f0f0f0 !important;
+  border-radius: 10px !important;
+}
+
+.image-tool__caption {
+  margin-top: 10px !important;
+}
+
+.image-tool__caption[data-placeholder]:empty:before {
+  color: #707684;
 }
